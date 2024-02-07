@@ -1,32 +1,40 @@
 package utils
 
 import (
+	"context"
 	"fmt"
+	"github.com/codernex/rssbackend/internal/auth"
 	"net/http"
-	"strings"
 )
 
-func IsAuthenticated(next http.Handler) http.Handler {
+// IsAuthenticated is a middleware function that checks for the presence and validity of an API key in the Authorization header of an HTTP request.
+// If the API key is not found or is malformed, it responds with an error message.
+// If the API key is valid, it calls the next HTTP handler in the chain.
+// Example Usage:
+//
+//	v1Router.Route("/protected", func(r chi.Router) {
+//		r.Use(utils.IsAuthenticated)
+//		r.Post("/", apiCfg.handlerCreateUser)
+//		r.Get("/", apiCfg.middlewareAuth(apiCfg.handlerGetUser))
+//	})
+func (cfg ApiConfig) IsAuthenticated(next http.Handler) http.Handler {
 	return http.HandlerFunc(
 		func(w http.ResponseWriter, r *http.Request) {
-			val := r.Header.Get("Authorization")
-
-			if val == "" {
-				RespondWithErr(w, 400, fmt.Sprintf("Api Key Not Found"))
+			apiKey, err := auth.GetAPIKey(r.Header)
+			if err != nil {
+				RespondWithErr(w, 401, fmt.Sprintf("Auth error: %v", err))
 				return
 			}
-			tokens := strings.Split(val, " ")
-			if len(tokens) != 2 {
-				RespondWithErr(w, 400, fmt.Sprintf("Api Key Mailformed"))
-				return
-			}
+			user, err := cfg.DB.GetUserByApiKey(r.Context(), apiKey)
 
-			if tokens[0] != "ApiKey" {
-				RespondWithErr(w, 400, fmt.Sprintf("Api Key Mailformed"))
+			if err != nil {
+				RespondWithErr(w, 401, fmt.Sprintf("User Not Found: %v", err))
 				return
 			}
 
-			next.ServeHTTP(w, r)
+			ctx := context.WithValue(r.Context(), "user", user)
+
+			next.ServeHTTP(w, r.WithContext(ctx))
 		},
 	)
 }

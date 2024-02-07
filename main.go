@@ -15,10 +15,6 @@ import (
 	"os"
 )
 
-type apiConfig struct {
-	DB *database.Queries
-}
-
 func main() {
 	err := godotenv.Load(".env")
 	if err != nil {
@@ -40,7 +36,7 @@ func main() {
 	}
 	queries := database.New(conn)
 
-	apiCfg := apiConfig{
+	apiCfg := utils.ApiConfig{
 		DB: queries,
 	}
 	router := chi.NewRouter()
@@ -69,16 +65,25 @@ func main() {
 	//***** User Routes Start ******
 
 	v1Router.Route("/users", func(r chi.Router) {
-		r.Use(utils.IsAuthenticated)
-		r.Post("/", apiCfg.handlerCreateUser)
-		r.Get("/", apiCfg.middlewareAuth(apiCfg.handlerGetUser))
+		r.Post("/", apiCfg.RequestHandler(handlerCreateUser))
+		r.Group(func(r chi.Router) {
+			r.Use(apiCfg.IsAuthenticated)
+			r.Get("/", apiCfg.RequestHandler(handlerGetUser))
+		})
 	})
 	//***** User Routes End ******
 
 	//***** Feed Routes Start ******
-	v1Router.Post("/feeds", apiCfg.middlewareAuth(apiCfg.handlerCreateFeed))
-	v1Router.Get("/feeds/{userId}", apiCfg.middlewareAuth(apiCfg.handlerGetFeedByUser))
-	v1Router.Get("/feeds", apiCfg.handlerGetFeeds)
+	v1Router.Route("/feeds", func(r chi.Router) {
+		r.Get("/", apiCfg.RequestHandler(handlerGetFeeds))
+		r.Group(func(r chi.Router) {
+			r.Use(apiCfg.IsAuthenticated)
+			r.Post("/", apiCfg.RequestHandler(handlerCreateFeed))
+			r.Get("/{userId}", apiCfg.RequestHandler(handlerGetFeedByUser))
+		})
+
+	})
+	//***** Feed Routes End ******
 	router.Mount("/v1", v1Router)
 
 	err = server.ListenAndServe()

@@ -10,7 +10,7 @@ import (
 	"time"
 )
 
-func (cfg apiConfig) handlerCreateFeed(w http.ResponseWriter, r *http.Request, user database.User) {
+func handlerCreateFeed(cfg *utils.ApiConfig, w http.ResponseWriter, r *http.Request) {
 
 	type body struct {
 		Name string `json:"name"`
@@ -24,6 +24,8 @@ func (cfg apiConfig) handlerCreateFeed(w http.ResponseWriter, r *http.Request, u
 	if err != nil {
 		utils.RespondWithErr(w, 400, fmt.Sprintf("Error parsing JSON:%v", err))
 	}
+
+	user := r.Context().Value("user").(database.User)
 
 	feed, err := cfg.DB.CreateFeed(r.Context(), database.CreateFeedParams{
 		ID:        uuid.New(),
@@ -41,8 +43,9 @@ func (cfg apiConfig) handlerCreateFeed(w http.ResponseWriter, r *http.Request, u
 	utils.RespondWithJson(w, 201, databaseFeed(feed))
 }
 
-func (cfg apiConfig) handlerGetFeedByUser(w http.ResponseWriter, r *http.Request, user database.User) {
+func handlerGetFeedByUser(cfg *utils.ApiConfig, w http.ResponseWriter, r *http.Request) {
 
+	user := r.Context().Value("user").(database.User)
 	feeds, err := cfg.DB.GetFeedByUser(r.Context(), user.ID)
 
 	feed := make([]Feed, len(feeds))
@@ -59,7 +62,7 @@ func (cfg apiConfig) handlerGetFeedByUser(w http.ResponseWriter, r *http.Request
 	utils.RespondWithJson(w, 200, feed)
 }
 
-func (cfg apiConfig) handlerGetFeeds(w http.ResponseWriter, r *http.Request) {
+func handlerGetFeeds(cfg *utils.ApiConfig, w http.ResponseWriter, r *http.Request) {
 	feeds, err := cfg.DB.GetFeeds(r.Context())
 
 	feed := make([]Feed, len(feeds))

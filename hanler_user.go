@@ -10,7 +10,7 @@ import (
 	"time"
 )
 
-func (cfg apiConfig) handlerCreateUser(w http.ResponseWriter, r *http.Request) {
+var handlerCreateUser = func(cfg *utils.ApiConfig, w http.ResponseWriter, r *http.Request) {
 
 	type body struct {
 		Name string `Name:"name"`
@@ -38,6 +38,8 @@ func (cfg apiConfig) handlerCreateUser(w http.ResponseWriter, r *http.Request) {
 	utils.RespondWithJson(w, 201, databaseUserToUser(user))
 }
 
-func (cfg apiConfig) handlerGetUser(w http.ResponseWriter, r *http.Request, user database.User) {
+var handlerGetUser = func(cfg *utils.ApiConfig, w http.ResponseWriter, r *http.Request) {
+
+	user := r.Context().Value("user").(database.User)
 	utils.RespondWithJson(w, 200, databaseUserToUser(user))
 }
