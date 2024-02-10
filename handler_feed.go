@@ -48,33 +48,21 @@ func handlerGetFeedByUser(cfg *utils.ApiConfig, w http.ResponseWriter, r *http.R
 	user := r.Context().Value("user").(database.User)
 	feeds, err := cfg.DB.GetFeedByUser(r.Context(), user.ID)
 
-	feed := make([]Feed, len(feeds))
-
 	if err != nil {
 		utils.RespondWithErr(w, 400, fmt.Sprintf("Coudn't get feed: %v", err))
 		return
 	}
 
-	for i, data := range feeds {
-		feed[i] = Feed(data)
-	}
-
-	utils.RespondWithJson(w, 200, feed)
+	utils.RespondWithJson(w, 200, databaseFeeds(feeds))
 }
 
 func handlerGetFeeds(cfg *utils.ApiConfig, w http.ResponseWriter, r *http.Request) {
 	feeds, err := cfg.DB.GetFeeds(r.Context())
 
-	feed := make([]Feed, len(feeds))
-
 	if err != nil {
 		utils.RespondWithErr(w, 400, fmt.Sprintf("Coudn't get feed: %v", err))
 		return
 	}
 
-	for i, data := range feeds {
-		feed[i] = Feed(data)
-	}
-
-	utils.RespondWithJson(w, 200, feed)
+	utils.RespondWithJson(w, 200, databaseFeeds(feeds))
 }

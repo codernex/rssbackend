@@ -8,4 +8,5 @@ import (
 func handlerReadiness(w http.ResponseWriter, r *http.Request) {
 	utils.RespondWithJson(w, 200, struct {
 	}{})
+
 }

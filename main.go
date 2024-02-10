@@ -13,9 +13,11 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"time"
 )
 
 func main() {
+
 	err := godotenv.Load(".env")
 	if err != nil {
 		log.Fatalf("Error occured finding .env %v", err)
@@ -39,6 +41,8 @@ func main() {
 	apiCfg := utils.ApiConfig{
 		DB: queries,
 	}
+
+	go startScraping(queries, 10, time.Minute)
 	router := chi.NewRouter()
 	corsOpt := cors.New(cors.Options{
 		AllowedOrigins:   []string{"https://*", "http://*"},
@@ -79,9 +83,17 @@ func main() {
 		r.Group(func(r chi.Router) {
 			r.Use(apiCfg.IsAuthenticated)
 			r.Post("/", apiCfg.RequestHandler(handlerCreateFeed))
+			r.Get("/posts", apiCfg.RequestHandler(handlerGetPostsForUser))
 			r.Get("/{userId}", apiCfg.RequestHandler(handlerGetFeedByUser))
 		})
 
+	})
+
+	v1Router.Route("/feed_follow", func(r chi.Router) {
+		r.Use(apiCfg.IsAuthenticated)
+		r.Post("/", apiCfg.RequestHandler(handlerCreateFeedFollows))
+		r.Get("/", apiCfg.RequestHandler(handlerGetFeedFollows))
+		r.Delete("/{feedFollowId}", apiCfg.RequestHandler(handlerDeleteFeedFollows))
 	})
 	//***** Feed Routes End ******
 	router.Mount("/v1", v1Router)

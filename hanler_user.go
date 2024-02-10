@@ -32,7 +32,7 @@ var handlerCreateUser = func(cfg *utils.ApiConfig, w http.ResponseWriter, r *htt
 	})
 
 	if err != nil {
-		utils.RespondWithErr(w, 400, fmt.Sprintf("Coudn't create user:", err))
+		utils.RespondWithErr(w, 400, fmt.Sprintf("coudn't create user:%v", err))
 		return
 	}
 	utils.RespondWithJson(w, 201, databaseUserToUser(user))
@@ -42,4 +42,20 @@ var handlerGetUser = func(cfg *utils.ApiConfig, w http.ResponseWriter, r *http.R
 
 	user := r.Context().Value("user").(database.User)
 	utils.RespondWithJson(w, 200, databaseUserToUser(user))
+}
+
+var handlerGetPostsForUser = func(cfg *utils.ApiConfig, w http.ResponseWriter, r *http.Request) {
+	user := r.Context().Value("user").(database.User)
+
+	posts, err := cfg.DB.GetPostsForUser(r.Context(), database.GetPostsForUserParams{
+		UserID: user.ID,
+		Limit:  int32(2),
+	})
+
+	if err != nil {
+		utils.RespondWithErr(w, 400, fmt.Sprintf("Coudn't fethc posts %v", err))
+		return
+	}
+
+	utils.RespondWithJson(w, 200, databasePostsToPosts(posts))
 }
