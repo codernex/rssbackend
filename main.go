@@ -63,9 +63,7 @@ func main() {
 
 	v1Router := chi.NewRouter()
 	v1Router.HandleFunc("/healthz", handlerReadiness)
-	v1Router.Get("/err", func(writer http.ResponseWriter, request *http.Request) {
-		utils.RespondWithErr(writer, 500, "Some error")
-	})
+
 	//***** User Routes Start ******
 
 	v1Router.Route("/users", func(r chi.Router) {
@@ -84,7 +82,7 @@ func main() {
 			r.Use(apiCfg.IsAuthenticated)
 			r.Post("/", apiCfg.RequestHandler(handlerCreateFeed))
 			r.Get("/posts", apiCfg.RequestHandler(handlerGetPostsForUser))
-			r.Get("/{userId}", apiCfg.RequestHandler(handlerGetFeedByUser))
+			//r.Get("/{userId}", apiCfg.RequestHandler(handlerGetFeedByUser))
 		})
 
 	})
