@@ -59,6 +59,8 @@ Boot.Dev, I aimed to implement additional functionality beyond the original proj
           "url": "RSS Feed URL"
       }
       ```
+  - **User will add feed**
+    - Scraper will fetch and add post from feed to database posts table
 
 #### /feeds/posts
 
@@ -104,4 +106,5 @@ Boot.Dev, I aimed to implement additional functionality beyond the original proj
 - **DELETE**
     - Requires Authentication
     - Remove Feeds From Following
+
 
